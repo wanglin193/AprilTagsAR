@@ -26,7 +26,7 @@ void testApp::setup()
 	Atag.init(AprilTags::tagCodes36h11);
 	myfont.loadFont("NewMedia Fett.ttf",12); 
 
-    if( readMatrix("data\\Kweb_cam.txt",Kweb_cam)==false )
+	if( readMatrix("data\\Kweb_cam.txt",Kweb_cam)==false )
 	{
 		Kweb_cam = Mat3::Zero(3,3);
 		Kweb_cam(2,2) = 1.0;
@@ -61,7 +61,7 @@ ofRectangle testApp::drawBackgroundAuto(  )
 	int hei = webCam.getHei();
 	int ofwid = ofGetViewportWidth();
 	int ofhei = ofGetViewportHeight() ;
-	  
+
 	ofRectangle winbg(0,0,ofwid,ofhei); 
 
 	float sx = (float)ofwid/(float)wid;
@@ -86,7 +86,7 @@ void testApp::drawBackground( ofRectangle& view_port )
 	int hei = webCam.getHei();
 	int ofwid = view_port.width ;
 	int ofhei = view_port.height ; 
-			
+
 	glBindTexture (GL_TEXTURE_2D, texid); 
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

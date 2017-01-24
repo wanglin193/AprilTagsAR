@@ -12,8 +12,7 @@ class testApp : public ofBaseApp
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 		testApp( int argc, char **argv )  
-		{ 
-			 
+		{ 			 
 		} 
  
 		ArtagDetect Atag;

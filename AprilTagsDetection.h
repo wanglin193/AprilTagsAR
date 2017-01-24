@@ -18,7 +18,7 @@ class ArtagDetect
 	cv::Mat image_gray;	 
 
 public:
-	 
+
 	AprilTags::TagDetector* m_tagDetector;
 	AprilTags::TagCodes m_tagCodes;
 	std::vector<AprilTags::TagDetection> detections; 
@@ -35,13 +35,13 @@ public:
 		m_tagDetector = new AprilTags::TagDetector(m_tagCodes);
 		flag_detect = 0; 
 	} 
- 
+
 	bool detectFirst( cv::Mat& image,Mat3& K, float m_tagSize, Mat4x4& RT )
 	{  
 		cv::cvtColor(image, image_gray, CV_BGR2GRAY);     
 		detections  = m_tagDetector->extractTags(image_gray);  	
-		 
-    	if( detections.size()>0 )
+
+		if( detections.size()>0 )
 		{ 
 			Eigen::Matrix4d rtxd = detections[0].getRelativeTransform( m_tagSize,K(0,0),K(1,1),K(0,2),K(1,2) );
 			RT = rtxd.cast<datatype>();
@@ -50,8 +50,7 @@ public:
 		else 
 			return false;
 	} 
-	 
+
 };
- 
-	
-	
+
+

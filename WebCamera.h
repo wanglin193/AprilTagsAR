@@ -29,17 +29,17 @@ struct WebCamera
 		//too dark can cause fail	 
 		if(!cap.read(frame))
 		{
-			std::cout << "Could not read from WebCamera in cap.init().\n"; 
-			return false;
+		std::cout << "Could not read from WebCamera in cap.init().\n"; 
+		return false;
 		}
 
 		hei = frame.rows;
 		wid = frame.cols;
-	    */
+		*/
 		//printf("web cam size = %d x %d.\n",wid,hei);
 		return true;
 	}	
-    int getWid() { return frame.cols; }
+	int getWid() { return frame.cols; }
 	int getHei() { return frame.rows; }
 
 	unsigned char * getData()
@@ -51,7 +51,7 @@ struct WebCamera
 	{ 
 		if(!cap.read(frame))//cap>>frame;
 		{
-		//	std::cout << "Could not read from WebCamera in cap.capture().\n";
+			//	std::cout << "Could not read from WebCamera in cap.capture().\n";
 			return false;
 		}
 		if( frame.empty() )
