@@ -38,7 +38,7 @@ struct WebCamera
 		*/
 		//printf("web cam size = %d x %d.\n",wid,hei);
 		return true;
-	}	
+	}
 	int getWid() { return frame.cols; }
 	int getHei() { return frame.rows; }
 
@@ -58,8 +58,6 @@ struct WebCamera
 		{ 
 			return false;
 		}
-		//frame.copyTo(image);
-		//cvtColor(image, gray, COLOR_BGR2GRAY);
 		return true;
 	}
 
