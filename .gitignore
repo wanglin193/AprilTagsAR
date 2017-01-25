@@ -1,0 +1,9 @@
+*.filters
+*.vcxproj
+*.opensdf
+*.rc
+*.sdf
+AprilTagsAR.suo
+*.sln
+AprilTagsAR.vcxproj.user
+ipch/apriltagsar-b052c267/apriltagsar-85fc7b37.ipch
