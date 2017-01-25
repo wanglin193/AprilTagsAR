@@ -32,7 +32,7 @@ class testApp : public ofBaseApp
 		void update();
 		void draw();
 		void drawBackground(ofRectangle& view_port);
-		ofRectangle drawBackgroundAuto( );
+		ofRectangle getRectBG( );
  
 		void keyPressed  (int key);
 		void keyReleased(int key);

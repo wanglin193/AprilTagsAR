@@ -2,60 +2,92 @@
 #include<glut.h>  
 
 float tagsize = 162.5f;//mm
+float scale = 1.0f;
+float angle = 0.0f; 
 
-GLuint texid;
-void initGLTexture()
-{ 
-	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);  
-	glGenTextures (1, &texid);   
-	glEnable(GL_DEPTH_TEST);
+void draw_help( int x,int y )
+{
+	ofPushStyle();
+	glDepthFunc(GL_ALWAYS); // draw on top of everything
+
+	ofSetColor(255, 255, 255);
+	 
+	int hei=18;
+	int py=y;
+	
+	ofDrawBitmapString("Press 'f' to toggle full screen", x, py);
+	ofDrawBitmapString("Press keys UP/DOWN to change scale", x, py+=hei); 
+	ofDrawBitmapString("Press keys LEFT/RIGHT to rotate", x, py+=hei); 
+
+	glDepthFunc(GL_LESS);
+	ofPopStyle();
+}
+
+//default K
+void setK( Mat3& Kweb_cam,int imw,int imh )
+{
+	Kweb_cam = Mat3::Zero(3,3);
+	Kweb_cam(2,2) = 1.0;
+	Kweb_cam(0,0) = Kweb_cam(1,1) = 0.8*imw; 
+	Kweb_cam(0,2) = imw/2;
+	Kweb_cam(1,2) = imh/2;
 }
 //--------------------------------------------------------------
 void testApp::setup()
 {   
-	if( webCam.init(0)  )
+	if( webCam.init(0,640,480)  )
 	{
 		cout<<"Init Web camera OK."<<endl; 
 	}
 	else
 	{
-		printf("Init Web camera error.\n");
+		cout<<"Init Web camera error."<<endl; 
 		::exit(0);
 	}
 
-	Atag.init(AprilTags::tagCodes36h11);
-	myfont.loadFont("NewMedia Fett.ttf",12); 
-
-	if( readMatrix("data\\Kweb_cam.txt",Kweb_cam)==false )
+	if( readMatrix("data\\Kcam_640_480.txt",Kweb_cam) )
 	{
-		Kweb_cam = Mat3::Zero(3,3);
-		Kweb_cam(2,2) = 1.0;
-		Kweb_cam(0,0)=Kweb_cam(1,1)=815.0; 
-		Kweb_cam(0,2)=320;//webCam.getWid()/2;
-		Kweb_cam(1,2)=240;//webCam.getHei()/2;
-	} 
-	cout<<Kweb_cam<<endl;
+		if(webCam.getWid()!=640)
+		{
+			cout<<"Scale K to camera frame size."<<endl; 
+			Kweb_cam = Kweb_cam * ((float)webCam.getWid()/640.0);
+			Kweb_cam(2,2) = 1.0;
+		}
+	}
+	else
+	{
+		setK(Kweb_cam, webCam.getWid(),webCam.getHei());
+	}
+	cout<<"K:\n"<<Kweb_cam<<endl;
+	
+	bgim.allocate( webCam.getWid(),webCam.getHei(), OF_IMAGE_COLOR );
+
+	Atag.init(AprilTags::tagCodes36h11); 
 	//init AR pose
 	ARpose = Mat4x4::Identity();  
 	ARpose(2,3) = -2000;   
-	initGLTexture(); 
 } 
 //--------------------------------------------------------------
 void testApp::update()
 { 
 	if( webCam.capture())
 	{    
+		//set back ground 
+		bgim.setFromPixels( webCam.getData(),webCam.getWid(),webCam.getHei(),OF_IMAGE_COLOR, false/*BGR*/ );
+
+		//detect marker pose
 		Mat4x4 RT_ = ARpose;
 		if( Atag.detectFirst( webCam.frame, Kweb_cam, tagsize, RT_ ) )
 		{
 			ARpose = RT_; 
+			//to GL space
 			ARpose.row(1) = -ARpose.row(1) ;
 			ARpose.row(2) = -ARpose.row(2) ; 
 		}  
 	}  
 }
 //--------------------------------------------------------------
-ofRectangle testApp::drawBackgroundAuto(  )
+ofRectangle testApp::getRectBG(  )
 { 
 	int wid = webCam.getWid();
 	int hei = webCam.getHei();
@@ -76,54 +108,22 @@ ofRectangle testApp::drawBackgroundAuto(  )
 	{
 		winbg.height=(float)hei*sx; 
 		winbg.y+=(ofhei- winbg.height)/2;
-	}  
-	drawBackground( winbg );
+	}  	
 	return winbg;
 }
 void testApp::drawBackground( ofRectangle& view_port )
-{ 
-	int wid = webCam.getWid();
-	int hei = webCam.getHei();
-	int ofwid = view_port.width ;
-	int ofhei = view_port.height ; 
+{ 	
+	//glMatrixMode(GL_PROJECTION);
+	//glPushMatrix();
+	ofDisableLighting();
+	glDisable(GL_DEPTH_TEST);
 
-	glBindTexture (GL_TEXTURE_2D, texid); 
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);  
-
-	if(webCam.getData() != NULL) 
-	{	 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-		glDisable(GL_DEPTH_TEST);
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		{
-			//gluOrtho2D(0.0, ofwid , ofhei,0);
-			glMatrixMode(GL_MODELVIEW); 
-			glPushMatrix(); 
-			glEnable(GL_TEXTURE_2D); 
-			glTexImage2D(GL_TEXTURE_2D, 0, 3, wid, hei, 0, GL_BGR, GL_UNSIGNED_BYTE,webCam.getData());
-			{ 
-				glBegin(GL_QUADS); 
-				{
-					glTexCoord2i(0, 0); glVertex2i(view_port.x,view_port.y);
-					glTexCoord2i(1, 0); glVertex2i(view_port.x+view_port.width,view_port.y);
-					glTexCoord2i(1, 1); glVertex2i(view_port.x+view_port.width,view_port.y+view_port.height);
-					glTexCoord2i(0, 1); glVertex2i(view_port.x,view_port.y+view_port.height);
-				}
-				glEnd();
-			}
-			glDisable(GL_TEXTURE_2D);
-			glPopMatrix();
-			glMatrixMode(GL_PROJECTION);
-		}
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LEQUAL);
-	} 
+	bgim.draw(view_port);
+	
+	glEnable(GL_DEPTH_TEST);
+	ofEnableLighting(); 
+	//glPopMatrix();
+	//glMatrixMode(GL_MODELVIEW); 
 } 
 void setFrustum( Mat3& K, float imWid, float imHei, float znear,float zfar )
 {
@@ -139,39 +139,60 @@ void setFrustum( Mat3& K, float imWid, float imHei, float znear,float zfar )
 void testApp::draw()
 {  
 	ofBackground(0,0,0);  
-	//draw Canvas
+
 	ofRectangle view_port = ofGetCurrentViewport();	 
-	view_port = drawBackgroundAuto( );  
-
-	char fpsStr[255]; 
-	sprintf(fpsStr, "fps: %4.1f", ofGetFrameRate());
-	myfont.setLineHeight(6);
-	myfont.drawString(fpsStr, ofGetViewportWidth()-100,  ofGetViewportHeight()-10); 
-
-	ofDisableLighting();   
+	
+	view_port = getRectBG( );  
+	drawBackground( view_port );
+	
+	ofDisableLighting();  
 	mycam.begin( view_port );  
 	{ 	
 		setFrustum( Kweb_cam, webCam.getWid(), webCam.getHei(), 50, 9999 );
-
-		glLoadMatrixf( (float*)(ARpose.data()) );//raw opengl
+		ofLoadMatrix((float*)(ARpose.data()));//glLoadMatrixf( (float*)(ARpose.data()) );
 		ofDrawGrid( tagsize/2.0, 4, false, false, false, true );
 		ofDrawAxis( tagsize );
 
 		light.enable();
-		light.setPosition(1000,1000,3000); 		
+		light.setPosition(1000,1000,3000); 	
+		
+		ofScale(scale,scale,scale);	//glScalef(downscale,downscale,downscale);
+		ofRotateZ(angle);	
 
 		ofBox(0,0,tagsize/2,tagsize);
 		//ofCone(0,0,0,tagsize/2,tagsize);
 		//ofSphere(0,0,tagsize/2,tagsize/2);
 
 		light.disable();
-	} 
-	mycam.begin();
+	}
+	mycam.end();
+	ofEnableLighting();	
+ 
+	ofDisableLighting();  
+	draw_help( 10, ofGetViewportHeight()-60 ); 
+	ofDrawBitmapString("fps: " + ofToString( ofGetFrameRate()), ofGetViewportWidth()-100,ofGetViewportHeight()-15);	
+	ofEnableLighting(); 	
 }   
 void testApp::keyPressed( int key )
 {
 	switch( key )
 	{ 
+	case OF_KEY_UP: 
+		scale*=1.02;
+		break;
+
+	case OF_KEY_DOWN: 
+		scale/=1.02;
+		break;
+
+	case OF_KEY_LEFT: 
+		angle+=5;
+		break;
+
+	case OF_KEY_RIGHT: 
+		angle-=5;
+		break;
+
 	case 'f':
 		ofToggleFullscreen();
 		break;

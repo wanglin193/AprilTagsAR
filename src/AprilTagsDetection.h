@@ -18,7 +18,6 @@ class ArtagDetect
 	cv::Mat image_gray;	 
 
 public:
-
 	AprilTags::TagDetector* m_tagDetector;
 	AprilTags::TagCodes m_tagCodes;
 	std::vector<AprilTags::TagDetection> detections; 

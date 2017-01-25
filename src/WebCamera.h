@@ -15,7 +15,7 @@ struct WebCamera
 	{ 
 		cap.release();
 	}
-	bool init(int id_=0)
+	bool init(int id_=0,int w=640,int h=480)
 	{ 	 
 		id = id_;
 		cap.open(id);
@@ -25,22 +25,18 @@ struct WebCamera
 			std::cout << "Could not open WebCamera ...\n";
 			return false;
 		}
-		/*
-		//too dark can cause fail	 
-		if(!cap.read(frame))
-		{
-		std::cout << "Could not read from WebCamera in cap.init().\n"; 
-		return false;
-		}
+		    
+		cap.set(CV_CAP_PROP_FRAME_WIDTH, w);
+		cap.set(CV_CAP_PROP_FRAME_HEIGHT,h); 
 
-		hei = frame.rows;
-		wid = frame.cols;
-		*/
+		wid = w;
+		hei = h;
+
 		//printf("web cam size = %d x %d.\n",wid,hei);
 		return true;
 	}
-	int getWid() { return frame.cols; }
-	int getHei() { return frame.rows; }
+	int getWid() { return wid; }
+	int getHei() { return hei; }
 
 	unsigned char * getData()
 	{
